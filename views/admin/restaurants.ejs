@@ -1,0 +1,71 @@
+<%- include('../partials/head') %>
+<link rel="stylesheet" href="/css/admin-hotels.css">
+
+<div class="admin-hotels-container">
+    <%- include('../partials/header') %>
+    <div class="hotels-dashboard">
+        <div class="dashboard-header">
+            <h1>Gestión de Restaurantes</h1>
+            <button class="add-hotel-btn" onclick="window.location.href='/admin/restaurants/new'" type="button">
+                <i class="fas fa-plus"></i> Agregar Nuevo Restaurante
+            </button>
+        </div>
+        <div class="hotels-filters">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Buscar restaurante...">
+            </div>
+            <div class="filter-options">
+                <select>
+                    <option value="">Todos los estados</option>
+                    <option value="activo">Activo</option>
+                    <option value="inactivo">Inactivo</option>
+                </select>
+            </div>
+        </div>
+        <div class="hotels-grid">
+            <% if (typeof restaurants !== 'undefined' && restaurants.length > 0) { %>
+                <% restaurants.forEach(restaurant => { %>
+                    <div class="hotel-card">
+                        <div class="hotel-image">
+                            <img src="<%= restaurant.imagen_principal || '/img/default-restaurant.jpg' %>" alt="<%= restaurant.nombre %>">
+                            <div class="hotel-status <%= restaurant.estado %>">
+                                <%= restaurant.estado %>
+                            </div>
+                        </div>
+                        <div class="hotel-info">
+                            <h3><%= restaurant.nombre %></h3>
+                            <p class="hotel-location">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <%= restaurant.ubicacion %>
+                            </p>
+                        </div>
+                        <div class="hotel-actions">
+                            <button class="edit-btn" title="Editar" onclick="window.location.href='/admin/restaurants/<%= restaurant.id %>/edit'">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="view-btn" title="Ver detalles" onclick="window.location.href='/admin/restaurants/<%= restaurant.id %>/view'">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <form action="/admin/restaurants/<%= restaurant.id %>/toggle-status" method="POST" style="display:inline;">
+                                <button class="toggle-status-btn" title="Cambiar estado" type="submit" style="background:none; border:none; padding:0;">
+                                    <i class="fas fa-power-off"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                <% }) %>
+            <% } else { %>
+                <div class="no-hotels">
+                    <i class="fas fa-utensils"></i>
+                    <p>No hay restaurantes registrados</p>
+                </div>
+            <% } %>
+        </div>
+    </div>
+</div>
+<%- include('../partials/head') %>
+
+<% if (typeof success !== 'undefined' && success && success.length > 0) { %>
+     <div class="alert alert-success"><%= success %></div>
+<% } %>

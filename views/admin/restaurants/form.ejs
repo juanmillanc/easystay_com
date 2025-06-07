@@ -1,0 +1,177 @@
+<%- include('../../partials/head') %>
+<link rel="stylesheet" href="/css/admin-hotels.css">
+
+<div class="admin-hotels-container">
+    <%- include('../../partials/header') %>
+    <div class="hotels-dashboard">
+        <div class="dashboard-header">
+            <h1><%= typeof restaurant !== 'undefined' ? 'Editar Restaurante' : 'Agregar Nuevo Restaurante' %></h1>
+            <a href="/admin/restaurants" class="add-hotel-btn" style="background:#eee; color:#333;"><i class="fas fa-arrow-left"></i> Volver</a>
+        </div>
+
+        <% if (error) { %>
+            <div class="alert alert-danger"><%= error %></div>
+        <% } %>
+        <% if (typeof success !== 'undefined' && success && success.length > 0) { %>
+             <div class="alert alert-success"><%= success %></div>
+        <% } %>
+
+        <form 
+            action="<%= restaurant ? '/admin/restaurants/' + restaurant.id + '/edit' : '/admin/restaurants' %>" 
+            method="POST" 
+            enctype="multipart/form-data"
+            class="hotel-form"
+        >
+            <% if (typeof restaurant !== 'undefined' && restaurant) { %>
+                <input type="hidden" name="_method" value="PUT"> <!-- Assuming you might use PUT/PATCH later, though POST with /edit path works too -->
+                <input type="hidden" name="existing_imagen_principal" value="<%= restaurant.imagen_principal || '' %>">
+            <% } %>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="nombre">Nombre del restaurante *</label>
+                    <input type="text" id="nombre" name="nombre" value="<%= restaurant && restaurant.nombre ? restaurant.nombre : '' %>" required>
+                </div>
+                <div class="form-group">
+                    <label for="ciudad">Ciudad *</label>
+                    <input type="text" id="ciudad" name="ciudad" value="<%= restaurant && restaurant.ciudad ? restaurant.ciudad : '' %>" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="direccion">Dirección *</label>
+                    <input type="text" id="direccion" name="direccion" value="<%= restaurant && restaurant.direccion ? restaurant.direccion : '' %>" required>
+                </div>
+                <div class="form-group">
+                    <label for="tipo_cocina">Tipo de cocina</label>
+                    <input type="text" id="tipo_cocina" name="tipo_cocina" value="<%= restaurant && restaurant.tipo_cocina ? restaurant.tipo_cocina : '' %>">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="precio_promedio">Precio promedio</label>
+                    <input type="number" step="0.01" id="precio_promedio" name="precio_promedio" value="<%= restaurant && restaurant.precio_promedio ? restaurant.precio_promedio : '' %>">
+                </div>
+                <div class="form-group">
+                    <label for="estado">Estado</label>
+                    <select id="estado" name="estado">
+                        <option value="activo" <%= (restaurant && restaurant.estado === 'activo') ? 'selected' : '' %>>Activo</option>
+                        <option value="inactivo" <%= (restaurant && restaurant.estado === 'inactivo') ? 'selected' : '' %>>Inactivo</option>
+                        <option value="cerrado_temporalmente" <%= (restaurant && restaurant.estado === 'cerrado_temporalmente') ? 'selected' : '' %>>Cerrado temporalmente</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="descripcion">Descripción</label>
+                <textarea id="descripcion" name="descripcion" rows="3"><%= restaurant && restaurant.descripcion ? restaurant.descripcion : '' %></textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="imagen_principal">Imagen principal</label>
+                    <% if (restaurant && restaurant.imagen_principal) { %>
+                        <div style="margin-bottom:10px;">
+                            <img src="<%= restaurant.imagen_principal %>" alt="Imagen actual" width="120" style="border-radius:8px;">
+                        </div>
+                        <input type="hidden" name="existing_imagen_principal" value="<%= restaurant.imagen_principal %>">
+                    <% } %>
+                    <input type="file" id="imagen_principal" name="imagen_principal" accept="image/*">
+                    <small class="form-text text-muted">
+                        Si no seleccionas una nueva imagen, se mantendrá la actual.
+                    </small>
+                </div>
+                <div class="form-group">
+                    <label for="coordenadas_lat">Latitud</label>
+                    <input type="text" id="coordenadas_lat" name="coordenadas_lat" value="<%= restaurant && restaurant.coordenadas_lat ? restaurant.coordenadas_lat : '' %>">
+                </div>
+                <div class="form-group">
+                    <label for="coordenadas_lng">Longitud</label>
+                    <input type="text" id="coordenadas_lng" name="coordenadas_lng" value="<%= restaurant && restaurant.coordenadas_lng ? restaurant.coordenadas_lng : '' %>">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Mesas y número de sillas</label>
+                <div id="mesas-container">
+                    <% if (typeof mesas !== 'undefined' && mesas.length > 0) { %>
+                        <% mesas.forEach(function(mesa, idx) { %>
+                            <div class="mesa-row">
+                                <input type="number" name="mesas_numero" placeholder="N° Mesa" min="1" style="width:90px;" value="<%= mesa.numero %>" required>
+                                <input type="number" name="mesas_sillas" placeholder="Sillas" min="1" style="width:90px;" value="<%= mesa.sillas %>" required>
+                                <button type="button" class="remove-mesa-btn" onclick="this.parentNode.remove()">Quitar</button>
+                            </div>
+                        <% }); %>
+                    <% } else { %>
+                        <div class="mesa-row">
+                            <input type="number" name="mesas_numero" placeholder="N° Mesa" min="1" style="width:90px;" required>
+                            <input type="number" name="mesas_sillas" placeholder="Sillas" min="1" style="width:90px;" required>
+                            <button type="button" class="remove-mesa-btn" onclick="this.parentNode.remove()">Quitar</button>
+                        </div>
+                    <% } %>
+                </div>
+                <button type="button" id="add-mesa-btn">Agregar otra mesa</button>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="add-hotel-btn"><i class="fas fa-save"></i> <%= typeof restaurant !== 'undefined' ? 'Actualizar Restaurante' : 'Guardar Restaurante' %></button>
+            </div>
+        </form>
+    </div>
+</div>
+<%- include('../../partials/footer') %>
+<style>
+.mesa-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 8px;
+    align-items: center;
+}
+.remove-mesa-btn {
+    background: #e74c3c;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 10px;
+    cursor: pointer;
+}
+#add-mesa-btn {
+    margin-top: 8px;
+    background: #007faf;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 14px;
+    cursor: pointer;
+}
+</style>
+<script>
+document.getElementById('add-mesa-btn').onclick = function() {
+    const container = document.getElementById('mesas-container');
+    const div = document.createElement('div');
+    div.className = 'mesa-row';
+    div.innerHTML = `
+        <input type="number" name="mesas_numero" placeholder="N° Mesa" min="1" style="width:90px;" required>
+        <input type="number" name="mesas_sillas" placeholder="Sillas" min="1" style="width:90px;" required>
+        <button type="button" class="remove-mesa-btn" onclick="this.parentNode.remove()">Quitar</button>
+    `;
+    container.appendChild(div);
+};
+
+// Asegurarse de que al menos haya una mesa
+document.querySelector('form').addEventListener('submit', function(e) {
+    const mesasContainer = document.getElementById('mesas-container');
+    if (mesasContainer.children.length === 0) {
+        e.preventDefault();
+        alert('Debe agregar al menos una mesa');
+        return false;
+    }
+    
+    // Validar que todos los campos tengan valores
+    const mesasNumero = document.getElementsByName('mesas_numero');
+    const mesasSillas = document.getElementsByName('mesas_sillas');
+    
+    for (let i = 0; i < mesasNumero.length; i++) {
+        if (!mesasNumero[i].value || !mesasSillas[i].value) {
+            e.preventDefault();
+            alert('Todos los campos de mesas y sillas deben tener valores');
+            return false;
+        }
+    }
+});
+</script> 

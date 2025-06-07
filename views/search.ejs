@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EasyStay - Hoteleria</title>
+    <link rel="stylesheet" href="/css/search.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <header class="main-header">
+        <div class="header-left">
+            <img src="/img/6.png" alt="EasyStay" class="logo">
+        </div>
+        <div class="header-right">
+            <a href="#" class="header-link"><i class="far fa-heart"></i> Favoritos</a>
+            <div class="language-selector">
+                <span>ES · $</span>
+            </div>
+           <div class="user-menu-container">
+           <% if (user) { %>
+         <!-- Estado cuando el usuario ha iniciado sesión -->
+          <button class="user-menu-button">
+            <i class="fas fa-user-circle"></i>
+            <span class="menu-text"><%= user.nombre %></span>
+            <i class="fas fa-chevron-down"></i>
+          </button>
+          <div class="user-dropdown-menu">
+            <div class="dropdown-header">
+                <span>Hola, <%= user.nombre %></span>
+                <small><%= user.email %></small>
+            </div>
+            <div class="dropdown-divider"></div>
+             <a href="/mi-perfil" class="dropdown-item"><i class="fas fa-user"></i> Mi perfil</a>
+             <a href="/bookings" class="dropdown-item"><i class="fas fa-list-alt"></i> Mis reservas</a>
+             <a href="/favorites" class="dropdown-item"><i class="far fa-heart"></i> Favoritos</a>
+            <div class="dropdown-divider"></div>
+            <a href="/logout" class="dropdown-item"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a>
+            </div>
+            <% } else { %>
+            <!-- Estado cuando no hay sesión activa -->
+           <button class="user-menu-button">
+            <i class="fas fa-user-circle"></i>
+            <span class="menu-text">Iniciar sesión</span>
+            <i class="fas fa-chevron-down"></i>
+            </button>
+            <div class="user-dropdown-menu">
+             <a href="/login" class="dropdown-item"><i class="fas fa-sign-in-alt"></i> Iniciar sesión</a>
+             <a href="/login" class="dropdown-item"><i class="fas fa-user-plus"></i> Registrarse</a>
+            </div>
+            <% } %>
+        </div>
+            <button class="menu-button" id="menuButton">
+                <i class="fas fa-bars"></i> <span class="menu-text">Menú</span>
+            </button>
+        </div>
+        
+        <!-- Menú móvil -->
+        <div class="mobile-menu" id="mobileMenu">
+            <div class="menu-header">
+                <img src="/img/6.png" alt="EasyStay" class="menu-logo">
+                <button class="close-menu" id="closeMenu">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <nav class="menu-nav">
+                <ul>
+                    <li><a href="#" class="menu-link active"><i class="fas fa-hotel"></i> Hoteles</a></li>
+                    <li><a href="/restaurantes" class="menu-link"><i class="fas fa-utensils"></i> Restaurantes</a></li>
+                    <li><a href="#" class="menu-link"><i class="fas fa-tag"></i> Puntos</a></li>
+                    <li><a href="#" class="menu-link"><i class="far fa-heart"></i> Favoritos</a></li>
+                    <li><a href="#" class="menu-link"><i class="fas fa-question-circle"></i> Ayuda</a></li>
+                </ul>
+            </nav>
+            <div class="menu-footer">
+                <div class="language-selector-menu">
+                    <span>ES · $</span>
+                </div>
+                <% if (user) { %>
+                    <div class="user-info-mobile">
+                        <span>Hola, <%= user.nombre %></span>
+                        <a href="/logout">Cerrar sesión</a>
+                    </div>
+                <% } else { %>
+                    <a href="/login" class="menu-login">Iniciar sesión</a>
+                <% } %>
+            </div>
+        </div>
+        <div class="menu-overlay" id="menuOverlay"></div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h1>Ahorra hasta un 50% en tu próxima estadía de hotel</h1>
+            <p>Comparamos precios de hotel de más de 100 páginas web</p>
+            
+            <div class="search-box">
+                <div class="search-input">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="¿Dónde quieres ir?">
+                </div>
+                
+                <div class="date-picker-container">
+                    <div class="date-inputs">
+                        <div class="date-input check-in">
+                            <i class="far fa-calendar"></i>
+                            <div class="date-details">
+                                <span class="label">Check-in</span>
+                                <span class="date">Seleccionar fecha</span>
+                            </div>
+                        </div>
+                        <div class="date-input check-out">
+                            <i class="far fa-calendar"></i>
+                            <div class="date-details">
+                                <span class="label">Check-out</span>
+                                <span class="date">Seleccionar fecha</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Date Picker Modal -->
+                    <div class="date-picker-modal" id="datePickerModal">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h2 id="modalTitle">Selecciona tu fecha de check-in</h2>
+                                <button class="close-button">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+
+                            <div class="quick-select">
+                                <button class="quick-select-btn">Esta noche</button>
+                                <button class="quick-select-btn">Mañana por la noche</button>
+                                <button class="quick-select-btn">El fin de semana</button>
+                                <button class="quick-select-btn">Próximo fin de semana</button>
+                            </div>
+
+                            <div class="calendars-container">
+                                <div class="calendar-navigation">
+                                    <button class="nav-btn prev-month">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </button>
+                                    <button class="nav-btn next-month">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </button>
+                                </div>
+                                
+                                <div class="calendars">
+                                    <div class="calendar" id="calendar1">
+                                        <div class="calendar-header">
+                                            <h3></h3>
+                                        </div>
+                                        <div class="weekdays">
+                                            <span>Lu</span>
+                                            <span>Ma</span>
+                                            <span>Mi</span>
+                                            <span>Ju</span>
+                                            <span>Vi</span>
+                                            <span>Sá</span>
+                                            <span>Do</span>
+                                        </div>
+                                        <div class="days"></div>
+                                    </div>
+
+                                    <div class="calendar" id="calendar2">
+                                        <div class="calendar-header">
+                                            <h3></h3>
+                                        </div>
+                                        <div class="weekdays">
+                                            <span>Lu</span>
+                                            <span>Ma</span>
+                                            <span>Mi</span>
+                                            <span>Ju</span>
+                                            <span>Vi</span>
+                                            <span>Sá</span>
+                                            <span>Do</span>
+                                        </div>
+                                        <div class="days"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="guests-rooms">
+                    <i class="fas fa-user"></i>
+                    <div class="guests-rooms-summary">
+                        <span class="guests-rooms-text">2 huéspedes, 1 habitación</span>
+                    </div>
+
+                    <!-- Guests & Rooms Modal -->
+                    <div class="guests-rooms-modal">
+                        <div class="guests-rooms-content">
+                            <!-- Adults Section -->
+                            <div class="guests-section">
+                                <div class="section-header">
+                                    <h3>Adultos</h3>
+                                </div>
+                                <div class="counter">
+                                    <button class="counter-btn minus" data-type="adults">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                    <span class="counter-value" id="adultsCount">2</span>
+                                    <button class="counter-btn plus" data-type="adults">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Children Section -->
+                            <div class="guests-section">
+                                <div class="section-header">
+                                    <h3>Niños</h3>
+                                    <span class="age-hint">0-17 años</span>
+                                </div>
+                                <div class="counter">
+                                    <button class="counter-btn minus" data-type="children">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                    <span class="counter-value" id="childrenCount">0</span>
+                                    <button class="counter-btn plus" data-type="children">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Children Ages Section -->
+                            <div class="children-ages" id="childrenAges">
+                                <!-- Ages will be added dynamically -->
+                            </div>
+
+                            <!-- Rooms Section -->
+                            <div class="guests-section">
+                                <div class="section-header">
+                                    <h3>Habitaciones</h3>
+                                </div>
+                                <div class="counter">
+                                    <button class="counter-btn minus" data-type="rooms">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                    <span class="counter-value" id="roomsCount">1</span>
+                                    <button class="counter-btn plus" data-type="rooms">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Pets Section -->
+                            <div class="pets-section">
+                                <label class="pets-checkbox">
+                                    <input type="checkbox" id="petsAllowed">
+                                    <span class="checkbox-text">Mascotas permitidas</span>
+                                </label>
+                                <span class="pets-hint">Solo alojamientos que aceptan mascotas</span>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="modal-actions">
+                                <button class="reset-btn">Reiniciar</button>
+                                <button class="apply-btn">Aceptar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="search-button">Buscar</button>
+            </div>
+        </section>
+
+        <section class="partners">
+            <img src="https://imgcy.trivago.com/image/upload/hardcodedimages/mpm-localised-logos-dark/395.png" alt="Booking.com">
+            <img src="https://imgcy.trivago.com/image/upload/hardcodedimages/mpm-localised-logos-dark/452.png" alt="Hoteles.com">
+            <img src="https://imgcy.trivago.com/image/upload/hardcodedimages/mpm-localised-logos-dark/626.png" alt="Expedia">
+            <img src="https://imgcy.trivago.com/image/upload/hardcodedimages/mpm-localised-logos-dark/2192.png" alt="VRBO">
+            <img src="https://imgcy.trivago.com/image/upload/hardcodedimages/mpm-localised-logos-dark/14.png" alt="All.com">
+            <img src="https://imgcy.trivago.com/image/upload/hardcodedimages/mpm-localised-logos-dark/634.png" alt="Trip.com">
+        </section>
+
+        <section class="deals">
+            <h2><center>Excelentes ofertas de hotel del momento</center></h2>
+            <div class="hotel-cards">
+                <% if (hotels && hotels.length > 0) { %>
+                    <% hotels.forEach(function(hotel) { %>
+                        <div class="hotel-card">
+                            <a href="/hotels/<%= hotel.id %>" class="hotel-link">
+                                <div class="hotel-image-container">
+                                    <img src="<%= hotel.imagen_principal || '/img/default-hotel.jpg' %>" alt="<%= hotel.nombre %>" class="hotel-image">
+                                    <div class="hotel-rating">
+                                        <span class="rating-number"><%= hotel.estrellas %></span>
+                                        <span class="rating-text">estrellas</span>
+                                    </div>
+                                </div>
+                                <div class="hotel-info">
+                                    <h3 class="hotel-name"><%= hotel.nombre %></h3>
+                                    <p class="hotel-location">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        <%= hotel.ciudad %>, <%= hotel.pais %>
+                                    </p>
+                                    <div class="hotel-features">
+                                        <% if (hotel.caracteristicas) { %>
+                                            <% if (hotel.caracteristicas.wifi) { %>
+                                                <span class="feature"><i class="fas fa-wifi"></i> WiFi</span>
+                                            <% } %>
+                                            <% if (hotel.caracteristicas.piscina) { %>
+                                                <span class="feature"><i class="fas fa-swimming-pool"></i> Piscina</span>
+                                            <% } %>
+                                            <% if (hotel.caracteristicas.restaurante) { %>
+                                                <span class="feature"><i class="fas fa-utensils"></i> Restaurante</span>
+                                            <% } %>
+                                        <% } %>
+                                    </div>
+                                    <div class="hotel-price-container">
+                                        <div class="price-info">
+                                            <span class="price-label">Precio por noche</span>
+                                            <span class="price-amount">$<%= hotel.precio_base %></span>
+                                        </div>
+                                        <button class="view-details-btn">Ver detalles</button>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    <% }); %>
+                <% } else { %>
+                    <div class="no-hotels">
+                        <i class="fas fa-hotel no-hotels-icon"></i>
+                        <p>No hay hoteles disponibles en este momento.</p>
+                    </div>
+                <% } %>
+            </div>
+        </section>
+
+        <footer class="site-footer">
+            <div class="footer-container">
+                <!-- Country Selector -->
+                <div class="country-selector">
+                    <img src="/img/co.png" alt="Bandera de Colombia" class="flag-icon">
+                    <span>Colombia</span>
+                </div>
+
+                <!-- Site Links -->
+                <div class="footer-links">
+                    <div class="links-column">
+                        <h4>Compañía</h4>
+                        <ul>
+                            <li><a href="#">Presentación</a></li>
+                            <li><a href="#">Ofertas de trabajo</a></li>
+                            <li><a href="#">Prensa</a></li>
+                            <li><a href="#">Relaciones con inversores</a></li>
+                        </ul>
+                    </div>
+                    <div class="links-column">
+                        <h4>Productos</h4>
+                        <ul>
+                            <li><a href="#">Apps de EasyStay</a></li>
+                            <li><a href="#">EasyStay Business Studio</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Newsletter Subscription -->
+                <div class="newsletter-subscription">
+                    <h4>Suscríbete al boletín</h4>
+                    <p>¿Quieres recibir inspiración exclusiva para tu próxima estadía? Suscríbete a nuestro boletín informativo.</p>
+                    <form class="newsletter-form">
+                        <input type="email" placeholder="Tu dirección de correo electrónico" required>
+                        <button type="submit">Suscribirse</button>
+                    </form>
+                </div>
+
+                <!-- Social Media -->
+                <div class="social-media">
+                    <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                    <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                    <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                    <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+
+                <!-- Legal Information -->
+                <div class="legal-info">
+                    <p class="company-address">EasyStay N.V. | 057841 Apartado, colombia</p>
+                    <p class="copyright">Copyright 2025 EasyStay | Todos los derechos reservados.</p>
+                </div>
+            </div>
+        </footer>
+    </main>
+
+    <script src="/js/search.js"></script>
+</body>
+</html>

@@ -259,3 +259,115 @@ body::before {
   }
 }
 
+.alerta-error, .alerta-exito {
+    padding: 12px 20px;
+    border-radius: 8px;
+    margin: 12px 0;
+    font-size: 1rem;
+    font-weight: 500;
+    text-align: center;
+    display: none; /* Se muestra solo cuando hay mensaje */
+    transition: all 0.3s;
+}
+
+.alerta-error {
+    background: #ff4444;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 0;
+    margin: 15px 0 0 0;
+    font-size: 1rem;
+    font-weight: 500;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(255, 68, 68, 0.10);
+    display: none; /* Se muestra solo cuando hay error */
+    letter-spacing: 0.5px;
+    transition: all 0.3s;
+}
+
+.alerta-error.mostrar {
+    display: block;
+}
+
+.alerta-exito {
+    background: #eaffea;
+    color: #2e7d32;
+    border: 1px solid #2e7d32;
+    box-shadow: 0 2px 8px rgba(46,125,50,0.08);
+}
+
+.form .error {
+  outline: solid 2px #9d2222;
+}
+
+/* Botón de inicio de sesión estilizado */
+.btn-login.estilizado {
+  background: linear-gradient(90deg, #007faf 0%, #00c6a7 100%);
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 12px 0;
+  width: 100%;
+  font-size: 1.1rem;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  transition: background 0.3s, transform 0.2s;
+  margin-top: 10px;
+}
+.btn-login.estilizado:hover {
+  background: linear-gradient(90deg, #00c6a7 0%, #007faf 100%);
+  transform: translateY(-2px) scale(1.03);
+  color: #fff;
+}
+
+.forgot-password-link {
+    display: inline-block;
+    margin: 10px 0 20px 0;
+    color: #6c63ff;
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.2s;
+    border-radius: 4px;
+    padding: 2px 8px;
+}
+
+.forgot-password-link:hover {
+    color: #fff;
+    background: #6c63ff;
+    text-decoration: underline;
+}
+
+.password-tooltip {
+  display: none;
+  position: absolute;
+  top: 110%;
+  left: 0;
+  background: #fff;
+  color: #333;
+  border: 1px solid #007faf;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  padding: 12px 18px;
+  width: 260px;
+  font-size: 0.95rem;
+  z-index: 20;
+  text-align: left;
+}
+.password-tooltip strong {
+  color: #007faf;
+  font-size: 1rem;
+}
+.password-tooltip ul {
+  margin: 8px 0 0 18px;
+  padding: 0;
+  font-size: 0.95rem;
+}
+.password-tooltip li {
+  margin-bottom: 4px;
+}
+
+.form label:focus-within .password-tooltip,
+#register-password:focus ~ .password-tooltip {
+  display: block;
+}

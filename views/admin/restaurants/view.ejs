@@ -1,0 +1,107 @@
+<%- include('../../partials/head') %>
+<link rel="stylesheet" href="/css/admin-hotels.css">
+<style>
+    .restaurant-detail-card {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        max-width: 600px;
+        margin: 32px auto;
+        padding: 32px 32px 24px 32px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .restaurant-detail-image {
+        width: 220px;
+        height: 160px;
+        object-fit: cover;
+        border-radius: 10px;
+        margin-bottom: 18px;
+        box-shadow: 0 1px 6px rgba(0,0,0,0.10);
+    }
+    .restaurant-detail-info {
+        width: 100%;
+    }
+    .restaurant-detail-info p {
+        margin: 8px 0;
+        font-size: 1.08em;
+    }
+    .badge {
+        display: inline-block;
+        padding: 4px 14px;
+        border-radius: 12px;
+        font-size: 0.95em;
+        color: #fff;
+        font-weight: 600;
+    }
+    .badge.activo { background: #27ae60; }
+    .badge.inactivo { background: #e74c3c; }
+    .badge.cerrado_temporalmente { background: #f39c12; }
+    .restaurant-detail-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        margin-bottom: 18px;
+    }
+    .restaurant-detail-header h1 {
+        font-size: 2em;
+        margin: 0;
+    }
+    .back-btn {
+        background: #eee;
+        color: #333;
+        padding: 7px 18px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: background 0.2s;
+        margin-left: 16px;
+    }
+    .back-btn:hover {
+        background: #e1e1e1;
+    }
+</style>
+<div class="admin-hotels-container">
+    <%- include('../../partials/header') %>
+    <div class="hotels-dashboard">
+        <div class="restaurant-detail-card">
+            <% if (restaurant.imagen_principal) { %>
+                <img src="<%= restaurant.imagen_principal %>" alt="Imagen" class="restaurant-detail-image">
+            <% } %>
+            <div class="restaurant-detail-header">
+                <h1><%= restaurant.nombre %></h1>
+                <a href="/admin/restaurants" class="back-btn"><i class="fas fa-arrow-left"></i> Volver</a>
+            </div>
+            <div class="restaurant-detail-info">
+                <p><strong>Ciudad:</strong> <%= restaurant.ciudad %></p>
+                <p><strong>Dirección:</strong> <%= restaurant.direccion %></p>
+                <p><strong>Tipo de cocina:</strong> <%= restaurant.tipo_cocina %></p>
+                <p><strong>Precio promedio:</strong> $<%= restaurant.precio_promedio %></p>
+                <p><strong>Estado:</strong> <span class="badge <%= restaurant.estado %>"><%= restaurant.estado %></span></p>
+                <p><strong>Descripción:</strong> <%= restaurant.descripcion %></p>
+                <% if (restaurant.coordenadas_lat && restaurant.coordenadas_lng) { %>
+                    <p><strong>Ubicación:</strong> <a href="https://www.google.com/maps?q=<%= restaurant.coordenadas_lat %>,<%= restaurant.coordenadas_lng %>" target="_blank">Ver en Google Maps</a></p>
+                <% } %>
+
+                <div class="mesas-section" style="margin-top: 20px;">
+                    <h3>Mesas Disponibles</h3>
+                    <% if (mesas && mesas.length > 0) { %>
+                        <div class="mesas-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
+                            <% mesas.forEach(mesa => { %>
+                                <div class="mesa-card" style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6;">
+                                    <p style="margin: 0;"><strong>Mesa #<%= mesa.numero %></strong></p>
+                                    <p style="margin: 5px 0 0 0;">Capacidad: <%= mesa.capacidad %> personas</p>
+                                </div>
+                            <% }); %>
+                        </div>
+                    <% } else { %>
+                        <p>No hay mesas registradas para este restaurante.</p>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<%- include('../../partials/footer') %>
