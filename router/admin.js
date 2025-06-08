@@ -13,7 +13,7 @@ router.get('/puntos', isAdmin, async (req, res) => {
         const [puntosRedimidos] = await pool.query(
             'SELECT SUM(puntos) as total FROM historial_puntos WHERE tipo = "redimido"'
         );
-
+        //esto es un comentario de prueba
         // Obtener usuarios con sus puntos
         const [usuarios] = await pool.query(
             `SELECT u.id as usuario_id, u.nombre, pu.*, nu.nombre as nivel_nombre
