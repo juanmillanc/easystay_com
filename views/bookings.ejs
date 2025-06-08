@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Reservas - EasyStay</title>
+    <link rel="stylesheet" href="/css/search.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body {
+            background: #f4f8fb;
+        }
+        .reservas-container {
+            max-width: 900px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            padding: 32px 24px;
+        }
+        h1 {
+            text-align: center;
+            color: #007faf;
+            margin-bottom: 30px;
+        }
+        .reserva-section {
+            margin-bottom: 40px;
+        }
+        .reserva-section h2 {
+            color: #00b894;
+            margin-bottom: 18px;
+            font-size: 1.4rem;
+            border-left: 5px solid #007faf;
+            padding-left: 10px;
+        }
+        .reserva-list {
+            list-style: none;
+            padding: 0;
+        }
+        .reserva-card {
+            background: #f7fafd;
+            border-radius: 12px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+            margin-bottom: 18px;
+            padding: 18px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            border-left: 4px solid #007faf;
+            position: relative;
+        }
+        .reserva-card .estado {
+            font-weight: bold;
+            color: #007faf;
+            text-transform: capitalize;
+        }
+        .reserva-card .fecha {
+            color: #555;
+        }
+        .reserva-card .icono {
+            font-size: 1.3rem;
+            margin-right: 8px;
+            color: #00b894;
+        }
+        .no-reservas {
+            color: #888;
+            font-style: italic;
+            margin-bottom: 20px;
+        }
+        .back-to-home {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #007faf;
+            color: #fff;
+            padding: 8px 18px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 18px;
+            margin-left: 0;
+            transition: background 0.2s, transform 0.2s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .back-to-home:hover {
+            background: #005f7a;
+            color: #fff;
+            transform: translateY(-2px) scale(1.03);
+        }
+        .reserva-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        .btn {
+            padding: 8px 15px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+        .btn-edit {
+            background-color: #007faf;
+            color: white;
+        }
+        .btn-edit:hover {
+            background-color: #006a94;
+            transform: translateY(-2px);
+        }
+        .btn-delete {
+            background-color: #dc3545;
+            color: white;
+        }
+        .btn-delete:hover {
+            background-color: #bb2d3b;
+            transform: translateY(-2px);
+        }
+        .btn-edit-disabled {
+            background-color: #bbb !important;
+            color: #fff !important;
+            cursor: not-allowed !important;
+            opacity: 0.7 !important;
+            border: none;
+            pointer-events: auto !important;
+        }
+        .estado-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+        .estado-activa {
+            background-color: #28a745;
+            color: white;
+        }
+        .estado-inactiva {
+            background-color: #6c757d;
+            color: white;
+        }
+        /* Toast notifications */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            background: #333;
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <%- include('partials/footer') %>
+    
+    <% if (messages.success) { %>
+        <div class="toast success-toast">
+            <%= messages.success %>
+        </div>
+    <% } %>
+    
+    <% if (messages.error) { %>
+        <div class="toast error-toast">
+            <%= messages.error %>
+        </div>
+    <% } %>
+
+    <div class="reservas-container">
+        <a href="/" class="back-to-home">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+        <h1><i class="fas fa-calendar-check"></i> Mis Reservas</h1>
+        
+        <div class="reserva-section">
+            <h2><i class="fas fa-hotel icono"></i> Reservas de Hotel</h2>
+            <% if (hotelBookings && hotelBookings.length > 0) { %>
+                <ul class="reserva-list">
+                    <% hotelBookings.forEach(r => { %>
+                        <li class="reserva-card">
+                            <div><strong>Hotel ID:</strong> <%= r.hotel_id %></div>
+                            <div><strong>Habitación ID:</strong> <%= r.habitacion_id %></div>
+                            <div><strong>Check-in:</strong> <span class="fecha"><%= r.check_in %></span></div>
+                            <div><strong>Check-out:</strong> <span class="fecha"><%= r.check_out %></span></div>
+                            <div><strong>Huéspedes:</strong> <%= r.num_huespedes %></div>
+                            <div><strong>Tipo de Habitación:</strong> <%= r.tipo_habitacion %></div>
+                            <div>
+                                <strong>Estado:</strong> 
+                                <span class="estado-badge <%= r.estado === 'activa' ? 'estado-activa' : 'estado-inactiva' %>">
+                                    <%= r.estado %>
+                                </span>
+                            </div>
+                            <% if (r.comentarios) { %>
+                                <div><strong>Comentarios:</strong> <%= r.comentarios %></div>
+                            <% } %>
+                            
+                            <div class="reserva-actions">
+                                <a href="/hotel/reserva/edit/<%= r.id %>" class="btn btn-edit">
+                                    <i class="fas fa-edit"></i> Editar
+                                </a>
+                                <button onclick="confirmarEliminacion('<%= r.id %>')" class="btn btn-delete">
+                                    <i class="fas fa-trash-alt"></i> Eliminar
+                                </button>
+                            </div>
+                        </li>
+                    <% }) %>
+                </ul>
+            <% } else { %>
+                <div class="no-reservas">No tienes reservas de hotel.</div>
+            <% } %>
+        </div>
+        <div class="reserva-section">
+            <h2><i class="fas fa-utensils icono"></i> Reservas de Restaurante</h2>
+            <% if (restaurantBookings && restaurantBookings.length > 0) { %>
+                <ul class="reserva-list">
+                    <% restaurantBookings.forEach(r => { %>
+                        <li class="reserva-card" id="restaurant-booking-<%= r.id %>">
+                            <div><strong>Restaurante:</strong> <%= r.nombre_restaurante || 'Desconocido' %> <%= r.ciudad_restaurante ? `(${r.ciudad_restaurante})` : '' %></div>
+                            <% 
+                                // Ensure date is in YYYY-MM-DD format for data-fecha attribute
+                                let fechaIso = '';
+                                if (r.fecha) {
+                                    if (typeof r.fecha === 'string') {
+                                        // Assuming string format from DB is already YYYY-MM-DD or parsable
+                                        // If not YYYY-MM-DD, you might need a more robust parsing/formatting here
+                                        fechaIso = r.fecha.split('T')[0]; // Take only the date part if it has time
+                                    } else if (r.fecha instanceof Date) {
+                                        fechaIso = r.fecha.toISOString().split('T')[0];
+                                    } else {
+                                         // Handle other potential types or log a warning
+                                         console.warn('Unexpected type for r.fecha:', typeof r.fecha);
+                                         fechaIso = ''; // Set to empty if type is unexpected
+                                    }
+                                }
+                            %>
+                            <div data-fecha="<%= fechaIso %>" data-hora="<%= r.hora %>"><strong>Fecha:</strong> <span class="fecha"><%= r.fecha ? r.fecha.toLocaleDateString ? r.fecha.toLocaleDateString('es-ES') : (typeof r.fecha === 'string' ? r.fecha.split('T')[0].split('-').reverse().join('/') : r.fecha) : '' %></span> - <strong>Hora:</strong> <%= r.hora %></div>
+                            
+                            <% // Countdown placeholder %>
+                            <div class="restaurant-countdown" style="font-weight: bold; color: #007faf; margin-top: 5px;"></div>
+
+                            <div><strong>Encargado:</strong> <%= r.nombre_reclamo || 'No asignado' %></div>
+                            <div><strong>Mesa:</strong> <%= r.numero_mesa ? `Mesa #${r.numero_mesa} (${r.capacidad} sillas)` : 'Por asignar' %></div>
+                            <div>
+                                <strong>Estado:</strong> 
+                                <span class="estado-badge <%= r.estado === 'activa' ? 'estado-activa' : 'estado-inactiva' %>">
+                                    <%= r.estado %>
+                                </span>
+                            </div>
+                            <% if (r.notas) { %>
+                                <div><strong>Notas:</strong> <%= r.notas %></div>
+                            <% } %>
+                            
+                            <div class="reserva-actions">
+                                <% if (r.estado === 'pendiente') { %>
+                                    <% if (r.isModificationRestricted) { %>
+                                        <span style="color:#e74c3c; font-weight: bold; margin-right: 15px;">Modificación restringida (menos de 12 horas restantes)</span>
+                                        <a href="javascript:void(0);" 
+                                           class="btn btn-edit btn-edit-disabled" 
+                                           title="No es posible modificar dentro del plazo restringido"
+                                           onclick="mostrarAlertaRestriccionEdicion(event)">
+                                            <i class="fas fa-edit"></i> Editar
+                                        </a>
+                                    <% } else if (!r.isPastReservation) { %>
+                                        <a href="/bookings/restaurant/<%= r.id %>/edit" class="btn btn-edit">
+                                            <i class="fas fa-edit"></i> Editar
+                                        </a>
+                                    <% } %>
+                                    <button onclick="confirmarEliminacionRestaurante('<%= r.id %>')" class="btn btn-delete">
+                                        <i class="fas fa-trash-alt"></i> Cancelar
+                                    </button>
+                                <% } %>
+                            </div>
+                        </li>
+                    <% }) %>
+                </ul>
+            <% } else { %>
+                <div class="no-reservas">No tienes reservas de restaurante.</div>
+            <% } %>
+        </div>
+    </div>
+
+    <script>
+    function confirmarEliminacion(id) {
+        Swal.fire({
+            title: '¿Estás seguro de eliminar esta reserva?',
+            text: "Esta acción no se puede deshacer y eliminará permanentemente la reserva",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sí, eliminar permanentemente',
+            cancelButtonText: 'Cancelar',
+            showDenyButton: true,
+            denyButtonText: 'Inactivar en su lugar',
+            denyButtonColor: '#6c757d'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = `/hotel/reserva/delete/${id}`;
+            } else if (result.isDenied) {
+                window.location.href = `/hotel/reserva/edit/${id}?inactivar=true`;
+            }
+        });
+    }
+
+    function confirmarEliminacionRestaurante(id) {
+        Swal.fire({
+            title: '¿Estás seguro de cancelar esta reserva?',
+            text: "Esta acción no se puede deshacer y cancelará la reserva.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sí, cancelar reserva',
+            cancelButtonText: 'Volver atrás'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/restaurante/reserva/cancelar/${id}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                })
+                .then(res => res.json())
+                .then(resp => {
+                    if (resp.success) {
+                        mostrarToast('¡Reserva cancelada correctamente!');
+                        // Eliminar la tarjeta de la reserva del DOM
+                        const card = document.querySelector(`button[onclick*="${id}"]`).closest('.reserva-card');
+                        if (card) card.remove();
+                    } else {
+                        Swal.fire('Error', resp.message || 'No se pudo cancelar la reserva.', 'error');
+                    }
+                })
+                .catch(() => Swal.fire('Error', 'No se pudo cancelar la reserva.', 'error'));
+            }
+        });
+    }
+
+    function mostrarToast(msg) {
+        const toast = document.createElement('div');
+        toast.className = 'toast success-toast';
+        toast.textContent = msg;
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    // Mostrar toast de éxito si la reserva fue cancelada
+    if (window.location.search.includes('cancelSuccess=1')) {
+        const toast = document.createElement('div');
+        toast.className = 'toast success-toast';
+        toast.textContent = '¡Reserva cancelada correctamente!';
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    // Function to update a single countdown timer
+    function updateSingleCountdown(bookingElement) {
+        // Find the div containing date and time using the data attributes
+        const dateTimeDiv = bookingElement.querySelector('[data-fecha]');
+        // Find the countdown display element
+        const countdownDisplay = bookingElement.querySelector('.restaurant-countdown');
+
+        // Exit if necessary elements are not found
+        if (!dateTimeDiv || !countdownDisplay) return;
+
+        const fechaStr = dateTimeDiv.dataset.fecha;
+        let horaStr = dateTimeDiv.dataset.hora; // Use let as we might modify it
+
+        if (!fechaStr || !horaStr) {
+             countdownDisplay.textContent = 'Fecha/Hora no disponible';
+             countdownDisplay.style.color = '#e74c3c'; // Optional: style error message
+             return;
+        }
+
+        // Ensure horaStr is in HH:mm format (remove seconds if present)
+        const horaParts = horaStr.split(':');
+        if (horaParts.length >= 2) {
+            horaStr = `${horaParts[0].padStart(2, '0')}:${horaParts[1].padStart(2, '0')}`;
+        } else {
+            // Handle unexpected time format - display error and return
+             console.error('Unexpected time format for countdown:', horaStr);
+             countdownDisplay.textContent = 'Error en formato de hora';
+             countdownDisplay.style.color = '#e74c3c';
+             return;
+        }
+
+        // Construct the reservation Date object using YYYY-MM-DDTHH:mm:00 format
+        const bookingDateTime = new Date(`${fechaStr}T${horaStr}:00`);
+        const now = new Date(); // Get the current date and time
+
+        // Check if the created Date object is valid
+        if (isNaN(bookingDateTime.getTime())) {
+            console.error('Invalid Date created for countdown:', `${fechaStr}T${horaStr}:00`);
+            countdownDisplay.textContent = 'Error en fecha/hora';
+            countdownDisplay.style.color = '#e74c3c'; // Style error message
+            return;
+        }
+
+        const timeDiff = bookingDateTime - now; // Difference in milliseconds
+
+        // If the reservation is in the past
+        if (timeDiff <= 0) {
+            countdownDisplay.textContent = 'La reserva ya ha pasado.';
+            countdownDisplay.style.color = '#e74c3c'; // Style past message
+            // You might also want to ensure the edit/cancel buttons are handled by EJS isPastReservation logic
+            return; // Stop the countdown for this booking
+        }
+
+        // Calculate time components (days, hours, minutes, seconds)
+        const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+
+        // Build the countdown text
+        let countdownText = 'Tiempo restante: ';
+        if (days > 0) {
+            countdownText += `${days} día${days > 1 ? 's' : ''} `;
+        }
+        // Show hours if there are days or at least one hour remaining
+        if (hours > 0 || days > 0) {
+             countdownText += `${hours} hora${hours > 1 ? 's' : ''} `;
+        }
+         // Always show minutes and seconds if time is remaining within the current hour/minute
+         // A common pattern is to show days/hours, then hours/minutes, then just minutes/seconds as the time gets closer.
+         // Let's show minutes and seconds if less than a day is left, otherwise show days and hours.
+        if (days === 0) {
+            // If less than a day, show hours, minutes, and seconds
+             countdownText += `${minutes} minuto${minutes > 1 ? 's' : ''} y ${seconds} segundo${seconds > 1 ? 's' : ''}`;
+        } else {
+            // If a day or more left, the days and hours part is sufficient for the list view
+            // Optional: You could add minutes here too if desired
+        }
+
+        countdownDisplay.textContent = countdownText.trim(); // Use trim to remove trailing space
+        countdownDisplay.style.color = '#007faf'; // Style the countdown
+        countdownDisplay.style.fontWeight = 'bold';
+    }
+
+    // Update all countdowns every second
+    document.addEventListener('DOMContentLoaded', function() {
+        const restaurantBookingElements = document.querySelectorAll('.reserva-card[id^="restaurant-booking-"]');
+
+        restaurantBookingElements.forEach(bookingElement => {
+            // Initial update
+            updateSingleCountdown(bookingElement);
+            // Set interval to update every second
+            // Store the interval ID on the element itself or in a map if needed for clearing
+            bookingElement.countdownIntervalId = setInterval(() => {
+                 updateSingleCountdown(bookingElement);
+            }, 1000);
+        });
+
+        // Optional: Clear intervals when navigating away to prevent memory leaks
+        window.addEventListener('beforeunload', () => {
+            restaurantBookingElements.forEach(bookingElement => {
+                if (bookingElement.countdownIntervalId) {
+                    clearInterval(bookingElement.countdownIntervalId);
+                }
+            });
+        });
+
+        // --- Existing SweetAlert2 and Toast functions --- (ensure these are present)
+        function confirmarEliminacion(id) { /* ... existing code ... */ }
+        function confirmarEliminacionRestaurante(id) { /* ... existing code ... */ }
+        // mostrarToast function is already declared at the top of the script block
+
+    }); // End of DOMContentLoaded
+
+    // Ocultar los toasts después de 3 segundos (from existing code)
+    document.addEventListener('DOMContentLoaded', () => {
+        const toasts = document.querySelectorAll('.toast');
+        toasts.forEach(toast => {
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        });
+    });
+
+    function mostrarAlertaRestriccionEdicion(event) {
+        event.preventDefault();
+        Swal.fire({
+            icon: 'warning',
+            title: 'Modificación restringida',
+            text: 'No es posible modificar la reserva porque está dentro del plazo restringido. Comuníquese directamente con el restaurante.',
+            confirmButtonColor: '#e74c3c'
+        });
+    }
+    </script>
+</body>
+</html> 

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Usuario</title>
+    <link rel="stylesheet" href="/css/search.css">
+    <style>
+        body {
+            background: #f4f8fb;
+            font-family: 'Montserrat', Arial, sans-serif;
+        }
+        .edit-user-container {
+            max-width: 500px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            padding: 32px 28px;
+        }
+        h1 {
+            color: #ffb300;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        form label {
+            display: block;
+            margin-top: 16px;
+            margin-bottom: 6px;
+            color: #007faf;
+            font-weight: 600;
+        }
+        form input[type="text"],
+        form input[type="email"],
+        form select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1.5px solid #ffd0b0;
+            border-radius: 8px;
+            font-size: 1em;
+            background: #fff8f3;
+            margin-bottom: 4px;
+            transition: border 0.2s;
+        }
+        form input:focus, form select:focus {
+            border: 1.5px solid #ffb300;
+            outline: none;
+            background: #fff;
+        }
+        .estado-btns {
+            margin: 18px 0 10px 0;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        .estado-btns button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background 0.2s, transform 0.2s;
+        }
+        .btn-activo { background: #28a745; color: #fff; }
+        .btn-activo:hover { background: #218838; transform: scale(1.04);}
+        .btn-inactivo { background: #dc3545; color: #fff; }
+        .btn-inactivo:hover { background: #b52a37; transform: scale(1.04);}
+        .btn-completado { background: #007bff; color: #fff; }
+        .btn-completado:hover { background: #0056b3; transform: scale(1.04);}
+        .guardar-btn {
+            width: 100%;
+            background: linear-gradient(90deg,#ffb300,#ffdb70);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 0;
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-top: 18px;
+            box-shadow: 0 2px 8px rgba(255,179,0,0.08);
+            cursor: pointer;
+            transition: background 0.2s, box-shadow 0.2s;
+        }
+        .guardar-btn:hover {
+            background: linear-gradient(90deg,#ffdb70,#ffb300);
+            box-shadow: 0 4px 16px rgba(255,179,0,0.13);
+        }
+        .error {
+            color: #e74c3c;
+            background: #fff3f3;
+            border: 1px solid #e74c3c;
+            border-radius: 8px;
+            padding: 10px 18px;
+            margin-bottom: 18px;
+            text-align: center;
+        }
+        .btn-volver {
+            display: inline-block;
+            margin-top: 18px;
+            background: #ffb300;
+            color: #fff;
+            padding: 10px 22px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background 0.2s;
+            text-align: center;
+        }
+        .btn-volver:hover {
+            background: #e6a100;
+        }
+    </style>
+</head>
+<body>
+    <div class="edit-user-container">
+        <h1>Editar Usuario</h1>
+        <% if (error) { %>
+            <div class="error"><%= error %></div>
+        <% } %>
+        <% if (user) { %>
+        <form method="POST" action="/admin/users/edit/<%= user.id %>">
+            <label>Nombre:</label>
+            <input type="text" name="nombre" value="<%= user.nombre %>" required>
+            <label>Email:</label>
+            <input type="email" name="email" value="<%= user.email %>" required>
+            <label>Teléfono:</label>
+            <input type="text" name="telefono" value="<%= user.telefono %>">
+            <label>Rol:</label>
+            <select name="rol" required>
+                <option value="usuario" <%= user.rol === 'usuario' ? 'selected' : '' %>>Usuario</option>
+                <option value="admin" <%= user.rol === 'admin' ? 'selected' : '' %>>Admin</option>
+                <option value="superadmin" <%= user.rol === 'superadmin' ? 'selected' : '' %>>Superadmin</option>
+            </select>
+            <label>Estado:</label>
+            <select name="estado" required>
+                <option value="activo" <%= user.estado === 'activo' ? 'selected' : '' %>>Activo</option>
+                <option value="inactivo" <%= user.estado === 'inactivo' ? 'selected' : '' %>>Inactivo</option>
+            </select>
+            <div class="estado-btns">
+                <!-- Botones de estado eliminados -->
+            </div>
+            <button type="submit" class="guardar-btn">Guardar cambios</button>
+        </form>
+        <% } else { %>
+            <p>Usuario no encontrado.</p>
+        <% } %>
+        <a href="/admin/users" class="btn-volver">← Volver a usuarios</a>
+    </div>
+    <script>
+    function cambiarEstado(nuevoEstado) {
+        document.querySelector('select[name="estado"]').value = nuevoEstado;
+        document.querySelector('form').submit();
+    }
+    </script>
+</body>
+</html>

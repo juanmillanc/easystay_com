@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EasyStay - Restaurantes</title>
+    <link rel="stylesheet" href="/css/search.css">
+    <link rel="stylesheet" href="/css/restaurantes.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <header class="main-header">
+        <div class="header-left">
+            <img src="/img/6.png" alt="EasyStay" class="logo">
+        </div>
+        <div class="header-right">
+            <a href="#" class="header-link"><i class="far fa-heart"></i> Favoritos</a>
+            <div class="language-selector">
+                <span>ES · $</span>
+            </div>
+            <div class="user-menu-container">
+                <% if (user) { %>
+              <!-- Estado cuando el usuario ha iniciado sesión -->
+               <button class="user-menu-button">
+                 <i class="fas fa-user-circle"></i>
+                 <span class="menu-text"><%= user.nombre %></span>
+                 <i class="fas fa-chevron-down"></i>
+               </button>
+               <div class="user-dropdown-menu">
+                 <div class="dropdown-header">
+                     <span>Hola, <%= user.nombre %></span>
+                     <small><%= user.email %></small>
+                 </div>
+                 <div class="dropdown-divider"></div>
+                  <a href="/account" class="dropdown-item"><i class="fas fa-user"></i> Mi perfil</a>
+                  <a href="/bookings" class="dropdown-item"><i class="fas fa-list-alt"></i> Mis reservas</a>
+                  <a href="/favorites" class="dropdown-item"><i class="far fa-heart"></i> Favoritos</a>
+                 <div class="dropdown-divider"></div>
+                 <a href="/logout" class="dropdown-item"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a>
+                 </div>
+                 <% } else { %>
+                 <!-- Estado cuando no hay sesión activa -->
+                <button class="user-menu-button">
+                 <i class="fas fa-user-circle"></i>
+                 <span class="menu-text">Iniciar sesión</span>
+                 <i class="fas fa-chevron-down"></i>
+                 </button>
+                 <div class="user-dropdown-menu">
+                  <a href="/login" class="dropdown-item"><i class="fas fa-sign-in-alt"></i> Iniciar sesión</a>
+                  <a href="/login" class="dropdown-item"><i class="fas fa-user-plus"></i> Registrarse</a>
+                 </div>
+                 <% } %>
+             </div>
+            <button class="menu-button" id="menuButton">
+                <i class="fas fa-bars"></i> <span class="menu-text">Menú</span>
+            </button>
+        </div>
+        
+        <!-- Menú móvil -->
+        <div class="mobile-menu" id="mobileMenu">
+            <div class="menu-header">
+                <img src="/img/6.png" alt="EasyStay" class="menu-logo">
+                <button class="close-menu" id="closeMenu">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <nav class="menu-nav">
+                <ul>
+                    <li><a href="/" class="menu-link"><i class="fas fa-hotel"></i> Hoteles</a></li>
+                    <li><a href="/restaurantes" class="menu-link active"><i class="fas fa-utensils"></i> Restaurantes</a></li>
+                    <li><a href="#" class="menu-link"><i class="fas fa-tag"></i> Ofertas</a></li>
+                    <li><a href="#" class="menu-link"><i class="far fa-heart"></i> Favoritos</a></li>
+                    <li><a href="#" class="menu-link"><i class="fas fa-question-circle"></i> Ayuda</a></li>
+                </ul>
+            </nav>
+            <div class="menu-footer">
+                <div class="language-selector-menu">
+                    <span>ES · $</span>
+                </div>
+                <% if (user) { %>
+                    <div class="user-info-mobile">
+                        <span>Hola, <%= user.name %></span>
+                        <a href="/logout">Cerrar sesión</a>
+                    </div>
+                <% } else { %>
+                    <a href="/login" class="menu-login">Iniciar sesión</a>
+                <% } %>
+            </div>
+        </div>
+        <div class="menu-overlay" id="menuOverlay"></div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h1>Descubre los mejores restaurantes</h1>
+            <p>Encuentra opciones gastronómicas cerca de tu ubicación o destino</p>
+            
+            <div class="search-box">
+                <div class="search-input">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="¿Dónde quieres comer?" id="restauranteSearch">
+                </div>
+                
+                <!-- Selector de fecha (opcional para reservas) -->
+                <div class="date-picker-container">
+                    <div class="date-inputs">
+                        <div class="date-input check-in">
+                            <i class="far fa-calendar"></i>
+                            <div class="date-details">
+                                <span class="label">Fecha</span>
+                                <span class="date">Seleccionar fecha</span>
+                            </div>
+                        </div>
+                        <div class="date-input check-out">
+                            <i class="far fa-clock"></i>
+                            <div class="date-details">
+                                <span class="label">Hora</span>
+                                <span class="date">Seleccionar hora</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="guests-rooms">
+                    <i class="fas fa-user-friends"></i>
+                    <div class="guests-rooms-summary">
+                        <button type="button" id="decreasePeople" class="counter-btn">-</button>
+                        <span class="guests-rooms-text" id="peopleCount">2</span> personas
+                        <button type="button" id="increasePeople" class="counter-btn">+</button>
+                        <input type="hidden" name="personas" id="personasInput" value="2">
+                    </div>
+                </div>
+
+                <!-- Modal para selección de personas -->
+                <div class="guests-rooms-modal">
+                    <div class="guests-rooms-content">
+                        <div class="guests-section">
+                            <div class="section-header">
+                                <h3>Personas</h3>
+                            </div>
+                            <div class="counter">
+                                <button class="counter-btn minus" data-type="people">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <span class="counter-value" id="peopleCount">2</span>
+                                <button class="counter-btn plus" data-type="people">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Filtros adicionales para restaurantes -->
+                        <div class="guests-section">
+                            <div class="section-header">
+                                <h3>Tipo de cocina</h3>
+                            </div>
+                            <select class="cuisine-select">
+                                <option value="">Cualquier tipo</option>
+                                <option value="mexicana">Mexicana</option>
+                                <option value="italiana">Italiana</option>
+                                <option value="asiatica">Asiática</option>
+                                <option value="vegetariana">Vegetariana</option>
+                            </select>
+                        </div>
+
+                        <div class="pets-section">
+                            <label class="pets-checkbox">
+                                <input type="checkbox" id="outdoorSeating">
+                                <span class="checkbox-text">Terraza exterior</span>
+                            </label>
+                        </div>
+
+                        <div class="modal-actions">
+                            <button class="reset-btn">Reiniciar</button>
+                            <button class="apply-btn">Aceptar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="search-button" id="searchRestaurantes">Buscar restaurantes</button>
+            </div>
+        </section>
+
+        <section class="partners">
+            <img src="https://imgcy.trivago.com/image/upload/hardcodedimages/mpm-localised-logos-dark/395.png" alt="Booking.com">
+            <img src="https://imgcy.trivago.com/image/upload/hardcodedimages/mpm-localised-logos-dark/452.png" alt="Hoteles.com">
+            <img src="https://imgcy.trivago.com/image/upload/hardcodedimages/mpm-localised-logos-dark/626.png" alt="Expedia">
+            <img src="https://imgcy.trivago.com/image/upload/hardcodedimages/mpm-localised-logos-dark/2192.png" alt="VRBO">
+        </section>
+
+        <section class="deals">
+            <h2><center>Restaurantes recomendados</center></h2>
+            <div class="hotel-cards" id="restaurantes-container">
+                <% if (typeof restaurants !== 'undefined' && restaurants.length > 0) { %>
+                    <% restaurants.forEach(function(restaurant) { %>
+                        <div class="hotel-card">
+                            <a href="/restaurants/<%= restaurant.id %>" class="restaurant-link">
+                                <div class="hotel-image-container">
+                                    <img src="<%= restaurant.imagen_principal || '/img/default-restaurant.jpg' %>" alt="<%= restaurant.nombre %>" class="hotel-image">
+                                    <div class="hotel-rating">
+                                        <span class="rating-number">4.5</span>
+                                        <span class="rating-text">estrellas</span>
+                                    </div>
+                                </div>
+                                <div class="hotel-info">
+                                    <h3 class="hotel-name"><%= restaurant.nombre %></h3>
+                                    <p class="hotel-location">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        <%= restaurant.ciudad %>
+                                    </p>
+                                    <div class="hotel-features">
+                                        <span class="feature"><i class="fas fa-utensils"></i> <%= restaurant.tipo_cocina %></span>
+                                        <% if (restaurant.precio_promedio) { %>
+                                            <span class="feature"><i class="fas fa-dollar-sign"></i> <%= restaurant.precio_promedio %></span>
+                                        <% } %>
+                                    </div>
+                                    <div class="hotel-price-container">
+                                        <div class="price-info">
+                                            <span class="price-label">Precio promedio</span>
+                                            <span class="price-amount">$<%= restaurant.precio_promedio %></span>
+                                        </div>
+                                        <button class="view-details-btn">Ver detalles</button>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    <% }); %>
+                <% } else { %>
+                    <div class="no-hotels">
+                        <i class="fas fa-utensils no-hotels-icon"></i>
+                        <p>No hay restaurantes disponibles en este momento.</p>
+                        <% if (user && (user.rol === 'admin' || user.rol === 'superadmin')) { %>
+                            <a href="/admin/restaurants/new" class="add-restaurant-btn">
+                                <i class="fas fa-plus"></i> Agregar Restaurante
+                            </a>
+                        <% } %>
+                    </div>
+                <% } %>
+            </div>
+        </section>
+
+        <footer class="site-footer">
+            <div class="footer-container">
+                <!-- Country Selector -->
+                <div class="country-selector">
+                    <img src="/img/co.png" alt="Bandera de Colombia" class="flag-icon">
+                    <span>Colombia</span>
+                </div>
+
+                <!-- Site Links -->
+                <div class="footer-links">
+                    <div class="links-column">
+                        <h4>Compañía</h4>
+                        <ul>
+                            <li><a href="#">Presentación</a></li>
+                            <li><a href="#">Ofertas de trabajo</a></li>
+                            <li><a href="#">Prensa</a></li>
+                            <li><a href="#">Relaciones con inversores</a></li>
+                        </ul>
+                    </div>
+                    <div class="links-column">
+                        <h4>Productos</h4>
+                        <ul>
+                            <li><a href="#">Apps de EasyStay</a></li>
+                            <li><a href="#">EasyStay Business Studio</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Newsletter Subscription -->
+                <div class="newsletter-subscription">
+                    <h4>Suscríbete al boletín</h4>
+                    <p>¿Quieres recibir inspiración exclusiva para tu próxima estadía? Suscríbete a nuestro boletín informativo.</p>
+                    <form class="newsletter-form">
+                        <input type="email" placeholder="Tu dirección de correo electrónico" required>
+                        <button type="submit">Suscribirse</button>
+                    </form>
+                </div>
+
+                <!-- Social Media -->
+                <div class="social-media">
+                    <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                    <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                    <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                    <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+
+                <!-- Legal Information -->
+                <div class="legal-info">
+                    <p class="company-address">EasyStay N.V. | 057841 Apartado, colombia</p>
+                    <p class="copyright">Copyright 2025 EasyStay | Todos los derechos reservados.</p>
+                </div>
+            </div>
+        </footer>
+    </main>
+
+    <script src="/js/restaurantes.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const decreaseBtn = document.getElementById('decreasePeople');
+            const increaseBtn = document.getElementById('increasePeople');
+            const peopleCountSpan = document.getElementById('peopleCount');
+            const personasInput = document.getElementById('personasInput');
+            let peopleCount = 2;
+
+            decreaseBtn.addEventListener('click', function() {
+                if (peopleCount > 1) {
+                    peopleCount--;
+                    peopleCountSpan.textContent = peopleCount;
+                    personasInput.value = peopleCount;
+                }
+            });
+
+            increaseBtn.addEventListener('click', function() {
+                peopleCount++;
+                peopleCountSpan.textContent = peopleCount;
+                personasInput.value = peopleCount;
+            });
+        });
+    </script>
+</body>
+</html>

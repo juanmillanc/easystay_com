@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Perfil de <%= user ? user.nombre : 'Usuario' %></title>
+    <link rel="stylesheet" href="/css/search.css">
+    <style>
+        body {
+            background: #f4f8fb;
+            font-family: 'Montserrat', Arial, sans-serif;
+        }
+        .user-detail-container {
+            max-width: 800px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            padding: 32px 28px;
+        }
+        h1 {
+            color: #ffb300;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .section-title {
+            color: #007faf;
+            font-size: 1.2rem;
+            margin-top: 28px;
+            margin-bottom: 12px;
+            border-left: 5px solid #ffb300;
+            padding-left: 10px;
+        }
+        .user-info-list {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 18px;
+        }
+        .user-info-list li {
+            margin-bottom: 8px;
+            font-size: 1.08rem;
+        }
+        .user-info-list strong {
+            color: #222;
+            min-width: 110px;
+            display: inline-block;
+        }
+        .reservas-list {
+            list-style: none;
+            padding: 0;
+        }
+        .reserva-card {
+            background: #f7fafd;
+            border-radius: 10px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+            margin-bottom: 14px;
+            padding: 14px 18px;
+            border-left: 4px solid #007faf;
+        }
+        .reserva-card span {
+            color: #555;
+        }
+        .no-reservas {
+            color: #888;
+            font-style: italic;
+            margin-bottom: 10px;
+        }
+        .btn-back {
+            display: inline-block;
+            margin-top: 24px;
+            background: #ffb300;
+            color: #fff;
+            padding: 10px 22px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        .btn-back:hover {
+            background: #e6a100;
+        }
+        .error {
+            color: #e74c3c;
+            background: #fff3f3;
+            border: 1px solid #e74c3c;
+            border-radius: 8px;
+            padding: 10px 18px;
+            margin-bottom: 18px;
+            text-align: center;
+        }
+        .estado-form {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 8px;
+        }
+        .estado-select {
+            padding: 7px 16px;
+            border-radius: 6px;
+            border: 1.5px solid #ffd0b0;
+            font-size: 1em;
+            background: #fff8f3;
+            color: #222;
+            transition: border 0.2s;
+        }
+        .estado-select:focus {
+            border: 1.5px solid #ffb300;
+            outline: none;
+            background: #fff;
+        }
+        .estado-guardar-btn {
+            background: linear-gradient(90deg,#ffb300,#ffdb70);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 7px 22px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 8px rgba(255,179,0,0.08);
+        }
+        .estado-guardar-btn:hover {
+            background: linear-gradient(90deg,#ffdb70,#ffb300);
+            box-shadow: 0 4px 16px rgba(255,179,0,0.13);
+        }
+    </style>
+</head>
+<body>
+    <div class="user-detail-container">
+        <h1>Perfil de Usuario</h1>
+        <% if (error) { %>
+            <div class="error"><%= error %></div>
+        <% } else { %>
+            <div>
+                <div class="section-title">Datos personales</div>
+                <ul class="user-info-list">
+                    <li><strong>ID:</strong> <%= user.id %></li>
+                    <li><strong>Nombre:</strong> <%= user.nombre %></li>
+                    <li><strong>Email:</strong> <%= user.email %></li>
+                    <li><strong>Teléfono:</strong> <%= user.telefono %></li>
+                    <li><strong>Rol:</strong> <%= user.rol %></li>
+                </ul>
+            </div>
+            <div>
+                <div class="section-title">Reservas de Hotel</div>
+                <% if (hotelBookings.length) { %>
+                    <ul class="reservas-list">
+                        <% hotelBookings.forEach(r => { %>
+                            <li class="reserva-card">
+                                <strong>Hotel ID:</strong> <span><%= r.hotel_id %></span><br>
+                                <strong>Habitación:</strong> <span><%= r.habitacion_id %></span><br>
+                                <strong>Check-in:</strong> <span><%= r.check_in %></span><br>
+                                <strong>Check-out:</strong> <span><%= r.check_out %></span>
+                            </li>
+                        <% }) %>
+                    </ul>
+                <% } else { %>
+                    <div class="no-reservas">No tiene reservas de hotel.</div>
+                <% } %>
+            </div>
+            <div>
+                <div class="section-title">Reservas de Restaurante</div>
+                <% if (restaurantBookings.length) { %>
+                    <ul class="reservas-list">
+                        <% restaurantBookings.forEach(r => { %>
+                            <li class="reserva-card">
+                                <strong>Restaurante ID:</strong> <span><%= r.restaurante_id %></span><br>
+                                <strong>Fecha:</strong> <span><%= r.fecha ? (new Date(r.fecha)).toLocaleDateString('es-ES') : '' %></span><br>
+                                <strong>Hora:</strong> <span><%= r.hora %></span><br>
+                                <strong>Mesa:</strong> <span><%= r.numero_mesa || 'Por asignar' %></span><br>
+                                <form method="POST" action="/admin/restaurante/reserva/estado/<%= r.id %>" class="estado-form">
+                                    <label for="estado-<%= r.id %>"><strong>Estado:</strong></label>
+                                    <select name="estado" id="estado-<%= r.id %>" class="estado-select">
+                                        <option value="pendiente" <%= r.estado === 'pendiente' ? 'selected' : '' %>>Pendiente</option>
+                                        <option value="cancelada" <%= r.estado === 'cancelada' ? 'selected' : '' %>>Cancelada</option>
+                                        <option value="completada" <%= r.estado === 'completada' ? 'selected' : '' %>>Completada</option>
+                                    </select>
+                                    <button type="submit" class="estado-guardar-btn">Guardar</button>
+                                </form>
+                            </li>
+                        <% }) %>
+                    </ul>
+                <% } else { %>
+                    <div class="no-reservas">No tiene reservas de restaurante.</div>
+                <% } %>
+            </div>
+        <% } %>
+        <a href="/admin/users" class="btn-back">← Volver a usuarios</a>
+    </div>
+</body>
+</html>
