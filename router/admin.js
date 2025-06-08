@@ -1,0 +1,299 @@
+const express = require('express');
+const router = express.Router();
+const pool = require('../databases/db');
+const puntosController = require('../controllers/puntosController');
+const { isAdmin } = require('../middleware/auth');
+
+// Rutas para gestión de puntos
+router.get('/puntos', isAdmin, async (req, res) => {
+    try {
+        // Obtener estadísticas
+        const [totalUsuarios] = await pool.query('SELECT COUNT(*) as total FROM usuarios');
+        const [totalPuntos] = await pool.query('SELECT SUM(puntos_totales) as total FROM puntos_usuario');
+        const [puntosRedimidos] = await pool.query(
+            'SELECT SUM(puntos) as total FROM historial_puntos WHERE tipo = "redimido"'
+        );
+
+        // Obtener usuarios con sus puntos
+        const [usuarios] = await pool.query(
+            `SELECT u.id as usuario_id, u.nombre, pu.*, nu.nombre as nivel_nombre
+             FROM usuarios u
+             LEFT JOIN puntos_usuario pu ON u.id = pu.usuario_id
+             LEFT JOIN niveles_usuario nu ON pu.nivel_id = nu.id
+             ORDER BY u.nombre`
+        );
+
+        res.render('admin/puntos', {
+            user: req.session.user,
+            usuarios,
+            totalUsuarios: totalUsuarios[0].total,
+            totalPuntos: totalPuntos[0].total || 0,
+            puntosRedimidos: puntosRedimidos[0].total || 0
+        });
+    } catch (error) {
+        console.error('Error al cargar página de puntos:', error);
+        res.status(500).render('error', {
+            message: 'Error al cargar la página de puntos',
+            user: req.session.user
+        });
+    }
+});
+
+router.post('/puntos/agregar', isAdmin, async (req, res) => {
+    try {
+        const { usuario_id, puntos, descripcion } = req.body;
+        await puntosController.agregarPuntos(usuario_id, parseInt(puntos), descripcion);
+        res.redirect('/admin/puntos');
+    } catch (error) {
+        console.error('Error al agregar puntos:', error);
+        res.status(500).render('error', {
+            message: 'Error al agregar puntos',
+            user: req.session.user
+        });
+    }
+});
+
+router.get('/puntos/historial/:usuarioId', isAdmin, async (req, res) => {
+    try {
+        const [usuario] = await pool.query(
+            'SELECT nombre FROM usuarios WHERE id = ?',
+            [req.params.usuarioId]
+        );
+
+        if (!usuario[0]) {
+            return res.status(404).render('error', {
+                message: 'Usuario no encontrado',
+                user: req.session.user
+            });
+        }
+
+        const historial = await puntosController.getHistorialPuntos(req.params.usuarioId);
+
+        res.render('admin/historial-puntos', {
+            user: req.session.user,
+            usuario: usuario[0],
+            historial
+        });
+    } catch (error) {
+        console.error('Error al cargar historial de puntos:', error);
+        res.status(500).render('error', {
+            message: 'Error al cargar historial de puntos',
+            user: req.session.user
+        });
+    }
+});
+
+// Nueva ruta para ver las reservas de un usuario específico
+router.get('/user-bookings/:userId', isAdmin, async (req, res) => {
+    try {
+        const userId = req.params.userId;
+
+        // Obtener nombre del usuario
+        const [userResult] = await pool.query(
+            'SELECT nombre FROM usuarios WHERE id = ?',
+            [userId]
+        );
+
+        if (userResult.length === 0) {
+            return res.status(404).render('error', {
+                message: 'Usuario no encontrado',
+                user: req.session.user
+            });
+        }
+        const userName = userResult[0].nombre;
+
+        // Obtener reservas de hotel del usuario
+        const [hotelBookings] = await pool.query(
+            `SELECT r.*, h.nombre AS hotel_nombre, hab.tipo AS habitacion_tipo
+             FROM reservas_hotel r
+             JOIN hoteles h ON r.hotel_id = h.id
+             JOIN habitaciones hab ON r.habitacion_id = hab.id
+             WHERE r.usuario_id = ? AND r.estado IN ('abonada', 'finalizada')`,
+            [userId]
+        );
+
+        // Obtener reservas de restaurante del usuario
+        const [restaurantBookings] = await pool.query(
+            'SELECT * FROM reservas_restaurante WHERE usuario_id = ? AND estado = \'activa\'',
+            [userId]
+        );
+
+        res.render('admin/user-bookings', {
+            user: req.session.user,
+            userName,
+            hotelBookings,
+            restaurantBookings,
+            error: null
+        });
+
+    } catch (error) {
+        console.error('Error al obtener reservas del usuario:', error);
+        res.status(500).render('error', {
+            message: 'Error al cargar las reservas del usuario',
+            user: req.session.user
+        });
+    }
+});
+
+// Rutas para la gestión de recompensas
+router.get('/recompensas', isAdmin, async (req, res) => {
+    try {
+        const [recompensas] = await pool.query('SELECT * FROM recompensas');
+        res.render('admin/recompensas', {
+            user: req.session.user,
+            recompensas,
+            messages: req.flash('success'),
+            error: req.flash('error')
+        });
+    } catch (error) {
+        console.error('Error al cargar recompensas:', error);
+        res.status(500).render('error', {
+            message: 'Error al cargar recompensas',
+            user: req.session.user
+        });
+    }
+});
+
+router.post('/recompensas/add', isAdmin, async (req, res) => {
+    try {
+        const { nombre, descripcion, tipo, puntos_requeridos, valor_descuento, codigo, fecha_inicio, fecha_fin, stock } = req.body;
+
+        // Validar campos requeridos
+        if (!nombre || !tipo || !puntos_requeridos) {
+            req.flash('error', 'Todos los campos obligatorios deben ser llenados.');
+            return res.redirect('/admin/recompensas');
+        }
+
+        // Validar puntos_requeridos como número
+        const parsedPuntos = parseInt(puntos_requeridos);
+        if (isNaN(parsedPuntos) || parsedPuntos <= 0) {
+            req.flash('error', 'Puntos requeridos debe ser un número positivo.');
+            return res.redirect('/admin/recompensas');
+        }
+
+        // Validar valor_descuento si el tipo es de descuento
+        let parsedValorDescuento = null;
+        if (tipo.includes('descuento')) {
+            parsedValorDescuento = parseFloat(valor_descuento);
+            if (isNaN(parsedValorDescuento) || parsedValorDescuento <= 0) {
+                req.flash('error', 'Valor de descuento debe ser un número positivo.');
+                return res.redirect('/admin/recompensas');
+            }
+        }
+
+        // Validar stock si es un número
+        const parsedStock = stock ? parseInt(stock) : null;
+        if (stock && (isNaN(parsedStock) || parsedStock < 0)) {
+            req.flash('error', 'Stock debe ser un número válido.');
+            return res.redirect('/admin/recompensas');
+        }
+
+        // Convertir fechas a formato SQL si existen
+        const sqlFechaInicio = fecha_inicio || null;
+        const sqlFechaFin = fecha_fin || null;
+
+        const query = `
+            INSERT INTO recompensas (
+                nombre, descripcion, tipo, puntos_requeridos, valor_descuento,
+                codigo, fecha_inicio, fecha_fin, estado, stock, creado_por
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+        const values = [
+            nombre, descripcion || null, tipo, parsedPuntos, parsedValorDescuento,
+            codigo || null, sqlFechaInicio, sqlFechaFin, 'activo', parsedStock,
+            req.session.user.id
+        ];
+
+        await pool.query(query, values);
+        req.flash('success', 'Recompensa agregada exitosamente!');
+        res.redirect('/admin/recompensas');
+    } catch (error) {
+        console.error('Error al agregar recompensa:', error);
+        req.flash('error', `Error al agregar recompensa: ${error.message}`);
+        res.redirect('/admin/recompensas');
+    }
+});
+
+// Ruta para mostrar el formulario de edición de recompensa
+router.get('/recompensas/edit/:id', isAdmin, async (req, res) => {
+    try {
+        const recompensaId = req.params.id;
+        const [recompensa] = await pool.query('SELECT * FROM recompensas WHERE id = ?', [recompensaId]);
+
+        if (recompensa.length === 0) {
+            req.flash('error', 'Recompensa no encontrada.');
+            return res.redirect('/admin/recompensas');
+        }
+
+        res.render('admin/edit-recompensa', {
+            user: req.session.user,
+            recompensa: recompensa[0],
+            messages: req.flash('success'),
+            error: req.flash('error')
+        });
+    } catch (error) {
+        console.error('Error al cargar la recompensa para edición:', error);
+        req.flash('error', `Error al cargar la recompensa: ${error.message}`);
+        res.redirect('/admin/recompensas');
+    }
+});
+
+// Ruta para manejar la actualización de la recompensa
+router.post('/recompensas/edit/:id', isAdmin, async (req, res) => {
+    const recompensaId = req.params.id; // Asegurarse de que esté definida
+    try {
+        const { nombre, descripcion, tipo, puntos_requeridos, valor_descuento, codigo, fecha_inicio, fecha_fin, stock, estado } = req.body;
+
+        // Validaciones (similar a la adición)
+        if (!nombre || !tipo || !puntos_requeridos || !estado) {
+            req.flash('error', 'Todos los campos obligatorios deben ser llenados.');
+            return res.redirect(`/admin/recompensas/edit/${recompensaId}`);
+        }
+
+        const parsedPuntos = parseInt(puntos_requeridos);
+        if (isNaN(parsedPuntos) || parsedPuntos <= 0) {
+            req.flash('error', 'Puntos requeridos debe ser un número positivo.');
+            return res.redirect(`/admin/recompensas/edit/${recompensaId}`);
+        }
+
+        let parsedValorDescuento = null;
+        if (tipo.includes('descuento')) {
+            parsedValorDescuento = parseFloat(valor_descuento);
+            if (isNaN(parsedValorDescuento) || parsedValorDescuento <= 0) {
+                req.flash('error', 'Valor de descuento debe ser un número positivo.');
+                return res.redirect(`/admin/recompensas/edit/${recompensaId}`);
+            }
+        }
+
+        const parsedStock = stock ? parseInt(stock) : null;
+        if (stock && (isNaN(parsedStock) || parsedStock < 0)) {
+            req.flash('error', 'Stock debe ser un número válido.');
+            return res.redirect(`/admin/recompensas/edit/${recompensaId}`);
+        }
+
+        const sqlFechaInicio = fecha_inicio || null;
+        const sqlFechaFin = fecha_fin || null;
+
+        const query = `
+            UPDATE recompensas SET
+            nombre = ?, descripcion = ?, tipo = ?, puntos_requeridos = ?, valor_descuento = ?,
+            codigo = ?, fecha_inicio = ?, fecha_fin = ?, estado = ?, stock = ?
+            WHERE id = ?
+        `;
+        const values = [
+            nombre, descripcion || null, tipo, parsedPuntos, parsedValorDescuento,
+            codigo || null, sqlFechaInicio, sqlFechaFin, estado, parsedStock,
+            recompensaId
+        ];
+
+        await pool.query(query, values);
+        req.flash('success', 'Recompensa actualizada exitosamente!');
+        res.redirect('/admin/recompensas');
+    } catch (error) {
+        console.error('Error al actualizar recompensa:', error);
+        req.flash('error', `Error al actualizar recompensa: ${error.message}`);
+        res.redirect(`/admin/recompensas/edit/${recompensaId}`);
+    }
+});
+
+module.exports = router; 
